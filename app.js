@@ -163,20 +163,20 @@ function renderTable() {
         let tr = document.createElement('tr');
         tr.className = "border-b border-gray-700 cell-hover";
 
-        // --- DENTRO DE renderTable() ---
         if (compi.tipo !== currentTipo) {
             currentTipo = compi.tipo;
             tipoRowSpan = compisFiltrados.filter(c => c.tipo === currentTipo).length;
             
+            // Nombre del tipo sin tildes para archivos y clases CSS
+            const tipoSinTilde = compi.tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const nombreArchivo = `${tipoSinTilde.toUpperCase()}.png`;
+            const rutaImagen = `assets/tipos/${nombreArchivo}`;
+
             let tdTipo = document.createElement('td');
             tdTipo.rowSpan = tipoRowSpan;
-            tdTipo.className = `px-2 py-2 text-sm font-bold text-center align-middle border-r border-gray-600 sticky left-0 z-0 tipo-${compi.tipo}`;
-            
-            // 1. Quitamos los acentos/tildes y pasamos a mayúsculas para el nombre del archivo
-            const tipoSinTilde = compi.tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-            const rutaImagen = `assets/tipos/${tipoSinTilde}.png`;
+            // Usamos tipoSinTilde para que coincida con el CSS (ej: tipo-Psiquico, tipo-Dragon)
+            tdTipo.className = `px-2 py-2 text-sm font-bold text-center align-middle border-r border-gray-600 sticky left-0 z-0 tipo-${tipoSinTilde}`;
 
-            // 2. Renderizamos el icono (usando la ruta sin tilde) y el texto original en el span (con tilde)
             tdTipo.innerHTML = `
                 <div class="tipo-celda">
                     <img src="${rutaImagen}" alt="${compi.tipo}" class="tipo-icono" onerror="this.style.display='none'">
@@ -214,13 +214,27 @@ function renderTable() {
                     });
                     tdNivel.appendChild(select);
                 } else {
-                    if (nivelActual.includes("4/5") || nivelActual.includes("5/5") || nivelActual.includes("/10")) {
-                        tdNivel.classList.add("bg-green-900", "text-green-100", "font-bold");
-                    } else if (nivelActual !== "-") {
-                        tdNivel.classList.add("bg-yellow-900", "text-yellow-100");
+                    // Mapeo de niveles a escala de color (Verde: 1/5 - 5/5 | Azul: 6/10 - 10/10)
+                    const coloresNivel = {
+                        "1/5": "bg-emerald-950/40 text-emerald-200",
+                        "2/5": "bg-emerald-900/60 text-emerald-200",
+                        "3/5": "bg-emerald-800 text-emerald-100",
+                        "4/5": "bg-emerald-700 text-white font-semibold",
+                        "5/5": "bg-emerald-600 text-white font-bold",
+
+                        "6/10": "bg-blue-950/40 text-blue-200",
+                        "7/10": "bg-blue-900/60 text-blue-200",
+                        "8/10": "bg-blue-800 text-blue-100",
+                        "9/10": "bg-blue-700 text-white font-semibold",
+                        "10/10": "bg-blue-600 text-white font-bold"
+                    };
+
+                    if (coloresNivel[nivelActual]) {
+                        tdNivel.className += ` ${coloresNivel[nivelActual]}`;
                     } else {
                         tdNivel.classList.add("text-gray-500");
                     }
+
                     tdNivel.textContent = nivelActual;
                 }
                 tr.appendChild(tdNivel);
