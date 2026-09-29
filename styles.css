@@ -11,7 +11,7 @@
 .tipo-Lucha { background-color: #BB5544; color: white; text-shadow: 1px 1px 2px black; }
 .tipo-Normal { background-color: #AAAA99; color: black; }
 .tipo-Planta { background-color: #77CC55; color: black; }
-.tipo-Psíquico { background-color: #FF5599; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Psíquico,.tipo-Psiquico { background-color: #FF5599; color: white; text-shadow: 1px 1px 2px black; }
 .tipo-Roca { background-color: #BBAA66; color: white; text-shadow: 1px 1px 2px black; }
 .tipo-Siniestro { background-color: #775544; color: white; text-shadow: 1px 1px 2px black; }
 .tipo-Tierra { background-color: #DDBB55; color: black; }
