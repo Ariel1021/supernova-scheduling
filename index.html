@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Compis - Proyecto Pokémon</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Hoja de estilos propia -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- SDK de Firebase (Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 p-4 font-sans min-h-screen">
+
+    <div class="max-w-[100%] mx-auto bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-2">
+            <h1 class="text-3xl font-bold text-white">Registro de Parejas de Compis</h1>
+            <span id="estadoConexion" class="text-xs bg-yellow-600 text-white px-2 py-1 rounded">Cargando datos...</span>
+        </div>
+
+        <!-- Panel de Control y Filtros -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 p-5 bg-gray-900 rounded border border-gray-700 shadow-inner">
+            <div>
+                <label class="block text-sm font-semibold text-gray-400 mb-1">Filtrar por Jugador</label>
+                <select id="filtroJugador" class="block w-full p-2.5 bg-gray-800 border border-gray-600 text-white rounded outline-none" onchange="renderTable()">
+                    <option value="Todos">Todos los jugadores</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold text-gray-400 mb-1">Filtrar por Tipo</label>
+                <select id="filtroTipo" class="block w-full p-2.5 bg-gray-800 border border-gray-600 text-white rounded outline-none" onchange="renderTable()">
+                    <option value="Todos">Todos los tipos</option>
+                </select>
+            </div>
+
+            <div class="flex items-end">
+                <button id="btnEdit" onclick="toggleEditMode()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded shadow transition-colors">
+                    Activar Modo Edición
+                </button>
+            </div>
+
+            <!-- Botones de Gestión -->
+            <div class="lg:col-span-3 flex flex-wrap gap-3 mt-2">
+                <button onclick="abrirModalJugador('agregar')" class="bg-green-700 hover:bg-green-600 text-white py-1.5 px-4 rounded text-sm shadow transition">+ Agregar Jugador</button>
+                <button onclick="abrirModalJugador('quitar')" class="bg-red-700 hover:bg-red-600 text-white py-1.5 px-4 rounded text-sm shadow transition">- Quitar Jugador</button>
+                <button onclick="abrirModalCompi('agregar')" class="bg-green-700 hover:bg-green-600 text-white py-1.5 px-4 rounded text-sm shadow transition">+ Agregar Compi</button>
+                <button onclick="abrirModalCompi('quitar')" class="bg-red-700 hover:bg-red-600 text-white py-1.5 px-4 rounded text-sm shadow transition">- Quitar Compi</button>
+            </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-700">
+            <table class="min-w-full divide-y divide-gray-700 table-fixed bg-gray-800">
+                <thead class="bg-gray-900" id="tableHead"></thead>
+                <tbody class="divide-y divide-gray-700" id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- MODAL JUGADOR -->
+    <div id="modalJugador" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg w-full max-w-md shadow-2xl">
+            <h2 id="modalJugadorTitulo" class="text-xl font-bold mb-4 text-white">Gestionar Jugador</h2>
+            <div id="campoNombreJugador" class="mb-4">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Nombre del jugador</label>
+                <input type="text" id="inputNombreJugador" class="w-full p-2.5 bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-blue-500">
+            </div>
+            <div id="campoSelectJugador" class="mb-4 hidden">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Seleccionar jugador a eliminar</label>
+                <select id="selectEliminarJugador" class="w-full p-2.5 bg-gray-900 border border-gray-600 rounded text-white outline-none"></select>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="cerrarModales()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded transition">Cancelar</button>
+                <button id="btnConfirmarJugador" onclick="procesarJugador()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded transition">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL COMPI -->
+    <div id="modalCompi" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-800 border border-gray-700 p-6 rounded-lg w-full max-w-md shadow-2xl">
+            <h2 id="modalCompiTitulo" class="text-xl font-bold mb-4 text-white">Gestionar Compi</h2>
+            
+            <div id="camposAgregarCompi">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Tipo Elemental</label>
+                    <select id="selectTipoCompi" class="w-full p-2.5 bg-gray-900 border border-gray-600 rounded text-white outline-none"></select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Nombre del Compi (ej. Greninja - Serena)</label>
+                    <input type="text" id="inputNombreCompi" class="w-full p-2.5 bg-gray-900 border border-gray-600 rounded text-white outline-none focus:border-blue-500">
+                </div>
+            </div>
+
+            <div id="camposQuitarCompi" class="mb-4 hidden">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Seleccionar Compi a eliminar</label>
+                <select id="selectEliminarCompi" class="w-full p-2.5 bg-gray-900 border border-gray-600 rounded text-white outline-none"></select>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="cerrarModales()" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded transition">Cancelar</button>
+                <button id="btnConfirmarCompi" onclick="procesarCompi()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded transition">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cargar lógica JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>

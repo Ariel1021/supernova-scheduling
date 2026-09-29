@@ -1,0 +1,35 @@
+/* Colores de los 18 tipos elementales */
+.tipo-Acero { background-color: #5695A3; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Agua { background-color: #3399FF; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Bicho { background-color: #AABB22; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Dragón { background-color: #7766EE; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Eléctrico { background-color: #FFCC33; color: black; }
+.tipo-Fantasma { background-color: #6666BB; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Fuego { background-color: #FF4422; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Hada { background-color: #EE99EE; color: black; }
+.tipo-Hielo { background-color: #66CCFF; color: black; }
+.tipo-Lucha { background-color: #BB5544; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Normal { background-color: #AAAA99; color: black; }
+.tipo-Planta { background-color: #77CC55; color: black; }
+.tipo-Psíquico { background-color: #FF5599; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Roca { background-color: #BBAA66; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Siniestro { background-color: #775544; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Tierra { background-color: #DDBB55; color: black; }
+.tipo-Veneno { background-color: #AA5599; color: white; text-shadow: 1px 1px 2px black; }
+.tipo-Volador { background-color: #8899FF; color: black; }
+
+/* Nombres de jugadores en vertical */
+.texto-vertical {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    padding: 10px 5px;
+    text-align: left;
+}
+
+.cell-hover:hover { background-color: #374151; }
+
+::-webkit-scrollbar { height: 10px; width: 10px; }
+::-webkit-scrollbar-track { background: #1f2937; }
+::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #6b7280; }
