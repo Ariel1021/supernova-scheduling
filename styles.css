@@ -1,22 +1,26 @@
-/* Colores de los 18 tipos elementales */
-.tipo-Acero { background-color: #5695A3; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Agua { background-color: #3399FF; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Bicho { background-color: #AABB22; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Dragón { background-color: #7766EE; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Eléctrico { background-color: #FFCC33; color: black; }
-.tipo-Fantasma { background-color: #6666BB; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Fuego { background-color: #FF4422; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Hada { background-color: #EE99EE; color: black; }
-.tipo-Hielo { background-color: #66CCFF; color: black; }
-.tipo-Lucha { background-color: #BB5544; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Normal { background-color: #AAAA99; color: black; }
-.tipo-Planta { background-color: #77CC55; color: black; }
-.tipo-Psíquico,.tipo-Psiquico { background-color: #FF5599; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Roca { background-color: #BBAA66; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Siniestro { background-color: #775544; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Tierra { background-color: #DDBB55; color: black; }
-.tipo-Veneno { background-color: #AA5599; color: white; text-shadow: 1px 1px 2px black; }
-.tipo-Volador { background-color: #8899FF; color: black; }
+/* Colores tenues basados en la paleta oficial de Pokémon Masters EX */
+
+.tipo-Normal   { background-color: #3f4244; color: #e2e8f0; } /* Gris neutro */
+.tipo-Fuego    { background-color: #5d2024; color: #fecdd3; } /* Rojo / Carmesí */
+.tipo-Agua     { background-color: #1a425f; color: #bae6fd; } /* Azul claro */
+.tipo-Electrico,
+.tipo-Eléctrico { background-color: #544413; color: #fef08a; } /* Amarillo dorado */
+.tipo-Planta   { background-color: #274825; color: #bbf7d0; } /* Verde hoja */
+.tipo-Hielo    { background-color: #20464f; color: #cffafe; } /* Celeste / Turquesa */
+.tipo-Lucha    { background-color: #572d21; color: #ffedd5; } /* Terracota / Naranja rojizo */
+.tipo-Veneno   { background-color: #3f254e; color: #f3e8ff; } /* Violeta */
+.tipo-Tierra   { background-color: #4b3223; color: #fed7aa; } /* Marrón */
+.tipo-Volador  { background-color: #223c6d; color: #dbeafe; } /* Azul violeta */
+.tipo-Psiquico,
+.tipo-Psíquico { background-color: #5a213e; color: #fce7f3; } /* Rosado fuerte / Magenta */
+.tipo-Bicho    { background-color: #3e481e; color: #ecfccb; } /* Verde lima */
+.tipo-Roca     { background-color: #483d31; color: #fef3c7; } /* Ocre / Marrón claro */
+.tipo-Fantasma { background-color: #3f2f4c; color: #e9d5ff; } /* Violeta desaturado */
+.tipo-Dragon,
+.tipo-Dragón   { background-color: #124353; color: #a5f3fc; } /* Azul verdoso / Teal */
+.tipo-Siniestro { background-color: #2a2933; color: #e2e8f0; } /* Gris muy oscuro / Grafito */
+.tipo-Acero    { background-color: #2e3544; color: #e2e8f0; } /* Azul grisáceo metal */
+.tipo-Hada     { background-color: #5a2641; color: #fbcfe8; } /* Rosa pastel intenso */
 
 /* Por defecto en pantallas chicas/medianas o con muchos jugadores: texto en vertical */
 .nombre-jugador {
