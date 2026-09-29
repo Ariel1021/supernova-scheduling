@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Importar datos de Excel a Firebase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PapaParse para procesar archivos CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-900 text-white p-8 font-sans">
+    <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+        <h1 class="text-2xl font-bold mb-2">Migrar Inventario a Firestore</h1>
+        <p class="text-sm text-gray-400 mb-6">Selecciona el archivo CSV exportado para cargar los compis y sus niveles por jugador.</p>
+
+        <input type="file" id="csvFile" accept=".csv" class="mb-4 block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+
+        <button onclick="procesarCSV()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded shadow transition">
+            Iniciar Carga Masiva
+        </button>
+
+        <div id="log" class="mt-6 p-4 bg-gray-900 rounded h-64 overflow-y-auto font-mono text-xs text-green-400 border border-gray-700">
+            Esperando archivo...
+        </div>
+    </div>
+
+    <script>
+        // Configuración de tu proyecto en Firebase
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "pokemas-supernova.firebaseapp.com",
+            projectId: "pokemas-supernova",
+            storageBucket: "pokemas-supernova.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function logMsg(mensaje) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += `<div>> ${mensaje}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function procesarCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Por favor selecciona un archivo .csv primero.");
+                return;
+            }
+
+            logMsg("Procesando archivo CSV...");
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: async function(results) {
+                    const filas = results.data;
+                    const columnas = results.meta.fields;
+                    
+                    if (!columnas || columnas.length < 3) {
+                        logMsg("[ERROR] No se detectaron las columnas correctamente.");
+                        return;
+                    }
+
+                    // Identificar cuál es la columna de Tipo, Compi y la lista de Jugadores
+                    const colTipoKey = columnas[0];  // Primera columna ("Tipo...")
+                    const colCompiKey = columnas[1]; // Segunda columna ("Compi...")
+                    const nombresJugadores = columnas.slice(2).map(j => j.trim());
+
+                    logMsg(`Jugadores detectados (${nombresJugadores.length}): ${nombresJugadores.join(", ")}`);
+
+                    let tipoActual = "";
+                    let totalCargados = 0;
+
+                    for (let fila of filas) {
+                        let valorTipo = fila[colTipoKey] ? fila[colTipoKey].trim() : "";
+                        let valorCompi = fila[colCompiKey] ? fila[colCompiKey].trim() : "";
+
+                        // Si encontramos un nuevo Tipo en la fila, lo actualizamos como "tipo activo"
+                        if (valorTipo !== "" && valorTipo !== "-") {
+                            tipoActual = valorTipo;
+                        }
+
+                        // Si la fila no tiene nombre de Compi o es una fila vacía de separación, la saltamos
+                        if (!valorCompi || valorCompi === "" || valorCompi === "-") {
+                            continue;
+                        }
+
+                        // Mapear los niveles de cada jugador para este compi
+                        let niveles = {};
+                        nombresJugadores.forEach(jugador => {
+                            let nivel = fila[jugador] ? fila[jugador].trim() : "-";
+                            if (nivel !== "" && nivel !== "-") {
+                                niveles[jugador] = nivel;
+                            }
+                        });
+
+                        // Subir a Firestore
+                        try {
+                            await db.collection("compis").add({
+                                tipo: tipoActual,
+                                nombre: valorCompi,
+                                niveles: niveles
+                            });
+                            totalCargados++;
+                            logMsg(`[OK] Subido: [${tipoActual}] ${valorCompi}`);
+                        } catch (error) {
+                            logMsg(`[ERROR] Falló ${valorCompi}: ${error.message}`);
+                        }
+                    }
+
+                    logMsg(`=======================================`);
+                    logMsg(`¡MIGRACIÓN COMPLETA! Se subieron ${totalCargados} compis.`);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

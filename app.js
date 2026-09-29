@@ -122,18 +122,37 @@ function renderTable() {
 
     const thead = document.getElementById('tableHead');
     const tbody = document.getElementById('tableBody');
+    const tablaElement = document.querySelector('table');
     
-    let trHead = '<tr><th class="px-3 py-4 text-center text-sm font-bold text-gray-300 w-24 border-r border-gray-600 sticky left-0 bg-gray-900 z-10">Tipo</th>';
+    // Si filtramos por un solo jugador, evitamos que la tabla ocupe todo el ancho
+    if (filtroJugador !== "Todos") {
+        tablaElement.classList.remove('w-full', 'min-w-full');
+        tablaElement.classList.add('w-auto');
+    } else {
+        tablaElement.classList.remove('w-auto');
+        tablaElement.classList.add('min-w-full');
+    }
+
+    // Encabezado
+    let trHead = '<tr>';
+    trHead += '<th class="px-3 py-4 text-center text-sm font-bold text-gray-300 w-24 border-r border-gray-600 sticky left-0 bg-gray-900 z-10">Tipo</th>';
     trHead += '<th class="px-4 py-4 text-left text-sm font-bold text-gray-300 w-64 border-r border-gray-600 sticky left-24 bg-gray-900 z-10">Compi</th>';
     
+    // Si se filtra por un jugador, forzamos texto horizontal siempre
+    const estiloClaseNombre = (filtroJugador !== "Todos") 
+        ? "text-sm font-semibold text-gray-300 text-center px-2 py-2" 
+        : "nombre-jugador text-sm font-semibold text-gray-300 mx-auto";
+
     jugadores.forEach(jugador => {
         if (filtroJugador === "Todos" || filtroJugador === jugador) {
-            trHead += `<th class="border-r border-gray-600"><div class="texto-vertical text-sm font-semibold text-gray-300 mx-auto">${jugador}</div></th>`;
+            const claseAnchoExtra = (filtroJugador !== "Todos") ? "col-jugador-individual" : "";
+            trHead += `<th class="border-r border-gray-600 ${claseAnchoExtra}"><div class="${estiloClaseNombre}">${jugador}</div></th>`;
         }
     });
     trHead += '</tr>';
     thead.innerHTML = trHead;
 
+    // Cuerpo
     tbody.innerHTML = '';
     let currentTipo = "";
     let tipoRowSpan = 0;
@@ -144,14 +163,27 @@ function renderTable() {
         let tr = document.createElement('tr');
         tr.className = "border-b border-gray-700 cell-hover";
 
+        // --- DENTRO DE renderTable() ---
         if (compi.tipo !== currentTipo) {
             currentTipo = compi.tipo;
             tipoRowSpan = compisFiltrados.filter(c => c.tipo === currentTipo).length;
             
             let tdTipo = document.createElement('td');
             tdTipo.rowSpan = tipoRowSpan;
-            tdTipo.className = `px-2 py-2 text-sm font-bold text-center border-r border-gray-600 sticky left-0 z-0 tipo-${compi.tipo}`;
-            tdTipo.textContent = compi.tipo;
+            tdTipo.className = `px-2 py-2 text-sm font-bold text-center align-middle border-r border-gray-600 sticky left-0 z-0 tipo-${compi.tipo}`;
+            
+            // 1. Quitamos los acentos/tildes y pasamos a mayúsculas para el nombre del archivo
+            const tipoSinTilde = compi.tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+            const rutaImagen = `assets/tipos/${tipoSinTilde}.png`;
+
+            // 2. Renderizamos el icono (usando la ruta sin tilde) y el texto original en el span (con tilde)
+            tdTipo.innerHTML = `
+                <div class="tipo-celda">
+                    <img src="${rutaImagen}" alt="${compi.tipo}" class="tipo-icono" onerror="this.style.display='none'">
+                    <span>${compi.tipo}</span>
+                </div>
+            `;
+
             tr.appendChild(tdTipo);
         }
 
@@ -163,7 +195,9 @@ function renderTable() {
         jugadores.forEach(jugador => {
             if (filtroJugador === "Todos" || filtroJugador === jugador) {
                 let tdNivel = document.createElement('td');
-                tdNivel.className = "px-1 py-3 text-sm text-center border-r border-gray-700 min-w-[50px]";
+                const claseAnchoCelda = (filtroJugador !== "Todos") ? "col-jugador-individual" : "min-w-[50px]";
+                tdNivel.className = `px-1 py-3 text-sm text-center border-r border-gray-700 ${claseAnchoCelda}`;
+                
                 let nivelActual = compi.niveles[jugador] || "-";
 
                 if (isEditMode) {
@@ -195,7 +229,6 @@ function renderTable() {
         tbody.appendChild(tr);
     });
 }
-
 // ==========================================
 // 5. GESTIÓN DE MODALES E INTERFAZ
 // ==========================================
