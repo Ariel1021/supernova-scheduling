@@ -47,12 +47,14 @@ let compis = [];
 let isEditMode = false;
 const opcionesNivel = ["-", "1/5", "2/5", "3/5", "4/5", "5/5", "6/10", "7/10", "8/10", "9/10", "10/10"];
 
+// Helper para ignorar tildes, mayúsculas y espacios sobrantes
+const limpiarTexto = (txt) => txt ? txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase() : "";
+
 // ==========================================
 // 3. FUNCIONES DE SINCRONIZACIÓN Y EDICIÓN
 // ==========================================
 function cargarDatos() {
     if (db) {
-        // Escucha cambios en tiempo real desde la nube
         db.collection("compis").onSnapshot((snapshot) => {
             compis = [];
             snapshot.forEach((doc) => {
@@ -62,7 +64,6 @@ function cargarDatos() {
             renderTable();
         });
     } else {
-        // Carga inicial local si aún no configuraste Firebase
         compis = [
             { id: "1", tipo: "Hada", nombre: "Magearna - Gladio", niveles: { "Alain": "3/5", "Bran": "5/5" } },
             { id: "2", tipo: "Fuego", nombre: "Charizard - Lionel (Archi)", niveles: { "Belphegor": "1/5", "Red 1996": "5/5" } }
@@ -124,7 +125,6 @@ function renderTable() {
     const tbody = document.getElementById('tableBody');
     const tablaElement = document.querySelector('table');
     
-    // Si filtramos por un solo jugador, evitamos que la tabla ocupe todo el ancho
     if (filtroJugador !== "Todos") {
         tablaElement.classList.remove('w-full', 'min-w-full');
         tablaElement.classList.add('w-auto');
@@ -138,7 +138,6 @@ function renderTable() {
     trHead += '<th class="px-3 py-4 text-center text-sm font-bold text-gray-300 w-24 border-r border-gray-600 sticky left-0 bg-gray-900 z-10">Tipo</th>';
     trHead += '<th class="px-4 py-4 text-left text-sm font-bold text-gray-300 w-64 border-r border-gray-600 sticky left-24 bg-gray-900 z-10">Compi</th>';
     
-    // Si se filtra por un jugador, forzamos texto horizontal siempre
     const estiloClaseNombre = (filtroJugador !== "Todos") 
         ? "text-sm font-semibold text-gray-300 text-center px-2 py-2" 
         : "nombre-jugador text-sm font-semibold text-gray-300 mx-auto";
@@ -157,24 +156,28 @@ function renderTable() {
     let currentTipo = "";
     let tipoRowSpan = 0;
 
-    const compisFiltrados = compis.filter(c => filtroTipo === "Todos" || c.tipo === filtroTipo);
+    // Filtrado insensible a tildes
+    const compisFiltrados = compis.filter(c => {
+        if (filtroTipo === "Todos") return true;
+        return limpiarTexto(c.tipo) === limpiarTexto(filtroTipo);
+    });
 
     compisFiltrados.forEach((compi) => {
         let tr = document.createElement('tr');
         tr.className = "border-b border-gray-700 cell-hover";
 
-        if (compi.tipo !== currentTipo) {
+        // Agrupamiento por tipo insensible a tildes
+        if (limpiarTexto(compi.tipo) !== limpiarTexto(currentTipo)) {
             currentTipo = compi.tipo;
-            tipoRowSpan = compisFiltrados.filter(c => c.tipo === currentTipo).length;
             
-            // Nombre del tipo sin tildes para archivos y clases CSS
-            const tipoSinTilde = compi.tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            tipoRowSpan = compisFiltrados.filter(c => limpiarTexto(c.tipo) === limpiarTexto(currentTipo)).length;
+            
+            const tipoSinTilde = compi.tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
             const nombreArchivo = `${tipoSinTilde.toUpperCase()}.png`;
             const rutaImagen = `assets/tipos/${nombreArchivo}`;
 
             let tdTipo = document.createElement('td');
             tdTipo.rowSpan = tipoRowSpan;
-            // Usamos tipoSinTilde para que coincida con el CSS (ej: tipo-Psiquico, tipo-Dragon)
             tdTipo.className = `px-2 py-2 text-sm font-bold text-center align-middle border-r border-gray-600 sticky left-0 z-0 tipo-${tipoSinTilde}`;
 
             tdTipo.innerHTML = `
@@ -214,7 +217,6 @@ function renderTable() {
                     });
                     tdNivel.appendChild(select);
                 } else {
-                    // Mapeo de niveles a escala de color (Verde: 1/5 - 5/5 | Azul: 6/10 - 10/10)
                     const coloresNivel = {
                         "1/5": "bg-emerald-950/40 text-emerald-200",
                         "2/5": "bg-emerald-900/60 text-emerald-200",
@@ -243,6 +245,7 @@ function renderTable() {
         tbody.appendChild(tr);
     });
 }
+
 // ==========================================
 // 5. GESTIÓN DE MODALES E INTERFAZ
 // ==========================================
@@ -275,7 +278,6 @@ function abrirModalJugador(accion) {
         btn.textContent = "Eliminar";
         btn.className = "px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded transition";
 
-        // Llenar select con jugadores actuales
         selectJugador.innerHTML = "";
         jugadores.forEach(j => {
             const opt = document.createElement('option');
@@ -319,7 +321,6 @@ function abrirModalCompi(accion) {
     inputNombre.value = "";
     modal.classList.remove('hidden');
 
-    // Llenar tipos
     selectTipo.innerHTML = "";
     todosLosTipos.forEach(t => {
         const opt = document.createElement('option');
@@ -341,7 +342,6 @@ function abrirModalCompi(accion) {
         btn.textContent = "Eliminar";
         btn.className = "px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded transition";
 
-        // Llenar select con compis actuales
         selectEliminar.innerHTML = "";
         compis.forEach(c => {
             const opt = document.createElement('option');

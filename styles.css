@@ -17,6 +17,7 @@
 .tipo-Siniestro { background-color: #484b5c; color: #ffffff; }
 .tipo-Acero { background-color: #556680; color: #ffffff; }
 .tipo-Hada { background-color: #d6518f; color: #ffffff; }
+
 /* Por defecto en pantallas chicas/medianas o con muchos jugadores: texto en vertical */
 .nombre-jugador {
     writing-mode: vertical-rl;
@@ -52,13 +53,6 @@
 ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
-.cell-hover:hover { background-color: #374151; }
-
-::-webkit-scrollbar { height: 10px; width: 10px; }
-::-webkit-scrollbar-track { background: #1f2937; }
-::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-
 /* Transición suave para cambios de ancho en la tabla y sus contenedor */
 .transicion-suave {
     transition: all 0.3s ease-in-out;
@@ -72,16 +66,16 @@ table, th, td {
 /* Contenedor del tipo: alineado en columna (icono arriba, texto abajo) */
 .tipo-celda {
     display: flex;
-    flex-direction: column; /* Alineación vertical */
-    align-items: center;    /* Centrado horizontal relativo al ícono */
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    gap: 4px;              /* Espacio vertical entre el icono y el texto */
+    gap: 4px;
     text-align: center;
 }
 
-/* Ícono del tipo: tamaño más grande */
+/* Ícono del tipo: tamaño ajustado */
 .tipo-icono {
-    width: 24px;   /* Tamaño ampliado (puedes probar con 28px si lo quieres aún más grande) */
+    width: 24px;
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
