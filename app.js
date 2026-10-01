@@ -97,8 +97,12 @@ function toggleEditMode() {
 }
 
 // ==========================================
-// 4. RENDERIZADO DE TABLA Y FILTROS
+// 4. RENDERIZADO DE TABLA Y FILTROS (REFACTORIZADO)
 // ==========================================
+
+/**
+ * Inicializa las opciones de los desplegables de filtro en el panel superior.
+ */
 function inicializarFiltros() {
     const selectJugador = document.getElementById('filtroJugador');
     jugadores.forEach(jugador => {
@@ -117,27 +121,14 @@ function inicializarFiltros() {
     });
 }
 
-function renderTable() {
-    const filtroJugador = document.getElementById('filtroJugador').value;
-    const filtroTipo = document.getElementById('filtroTipo').value;
-
-    const thead = document.getElementById('tableHead');
-    const tbody = document.getElementById('tableBody');
-    const tablaElement = document.querySelector('table');
-    
-    if (filtroJugador !== "Todos") {
-        tablaElement.classList.remove('w-full', 'min-w-full');
-        tablaElement.classList.add('w-auto');
-    } else {
-        tablaElement.classList.remove('w-auto');
-        tablaElement.classList.add('min-w-full');
-    }
-
-    // Encabezado
+/**
+ * Construye el HTML para la fila del encabezado (<thead>).
+ */
+function construirEncabezadoHTML(filtroJugador) {
     let trHead = '<tr>';
     trHead += '<th class="px-3 py-4 text-center text-sm font-bold text-gray-300 w-24 border-r border-gray-600 sticky left-0 bg-gray-900 z-10">Tipo</th>';
     trHead += '<th class="px-4 py-4 text-left text-sm font-bold text-gray-300 w-64 border-r border-gray-600 sticky left-24 bg-gray-900 z-10">Compi</th>';
-    
+
     const estiloClaseNombre = (filtroJugador !== "Todos") 
         ? "text-sm font-semibold text-gray-300 text-center px-2 py-2" 
         : "nombre-jugador text-sm font-semibold text-gray-300 mx-auto";
@@ -148,104 +139,153 @@ function renderTable() {
             trHead += `<th class="border-r border-gray-600 ${claseAnchoExtra}"><div class="${estiloClaseNombre}">${jugador}</div></th>`;
         }
     });
+
     trHead += '</tr>';
-    thead.innerHTML = trHead;
+    return trHead;
+}
 
-    // Cuerpo
-    tbody.innerHTML = '';
-    let currentTipo = "";
-    let tipoRowSpan = 0;
+/**
+ * Crea la celda agrupadora de Tipo Elemental con su icono e imagen.
+ */
+function crearCeldaTipo(compi, rowSpan) {
+    const tipoSinTilde = compi.tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const nombreArchivo = `${tipoSinTilde.toUpperCase()}.png`;
+    const rutaImagen = `assets/tipos/${nombreArchivo}`;
 
-    // Filtrado insensible a tildes
+    let tdTipo = document.createElement('td');
+    tdTipo.rowSpan = rowSpan;
+    tdTipo.className = `px-2 py-2 text-sm font-bold text-center align-middle border-r border-gray-600 sticky left-0 z-0 tipo-${tipoSinTilde}`;
+
+    tdTipo.innerHTML = `
+        <div class="tipo-celda">
+            <img src="${rutaImagen}" alt="${compi.tipo}" class="tipo-icono" onerror="this.style.display='none'">
+            <span>${compi.tipo}</span>
+        </div>
+    `;
+
+    return tdTipo;
+}
+
+/**
+ * Crea la celda para el nombre del Compi.
+ */
+function crearCeldaNombreCompi(nombre) {
+    let tdNombre = document.createElement('td');
+    tdNombre.className = "px-4 py-3 text-sm text-gray-200 border-r border-gray-600 font-medium sticky left-24 bg-gray-800 z-0";
+    tdNombre.textContent = nombre;
+    return tdNombre;
+}
+
+/**
+ * Obtiene las clases CSS de color según el nivel formateado.
+ */
+function obtenerClaseColorNivel(nivel) {
+    const coloresNivel = {
+        "1/5": "bg-emerald-950/40 text-emerald-200",
+        "2/5": "bg-emerald-900/60 text-emerald-200",
+        "3/5": "bg-emerald-800 text-emerald-100",
+        "4/5": "bg-emerald-700 text-white font-semibold",
+        "5/5": "bg-emerald-600 text-white font-bold",
+
+        "6/10": "bg-blue-950/40 text-blue-200",
+        "7/10": "bg-blue-900/60 text-blue-200",
+        "8/10": "bg-blue-800 text-blue-100",
+        "9/10": "bg-blue-700 text-white font-semibold",
+        "10/10": "bg-blue-600 text-white font-bold"
+    };
+
+    return coloresNivel[nivel] || "text-gray-500";
+}
+
+/**
+ * Crea la celda individual de nivel para un jugador (modo lectura o modo edición).
+ */
+function crearCeldaNivel(compi, jugador, filtroJugador) {
+    let tdNivel = document.createElement('td');
+    const claseAnchoCelda = (filtroJugador !== "Todos") ? "col-jugador-individual" : "min-w-[50px]";
+    tdNivel.className = `px-1 py-3 text-sm text-center border-r border-gray-700 ${claseAnchoCelda}`;
+    
+    let nivelActual = compi.niveles[jugador] || "-";
+
+    if (isEditMode) {
+        let select = document.createElement('select');
+        select.className = "border border-gray-500 p-1 rounded bg-gray-700 text-white text-xs w-full text-center outline-none";
+        select.onchange = (e) => actualizarNivel(compi.id, jugador, e.target.value);
+        
+        opcionesNivel.forEach(opcion => {
+            let opt = document.createElement('option');
+            opt.value = opcion;
+            opt.textContent = opcion;
+            if (opcion === nivelActual) opt.selected = true;
+            select.appendChild(opt);
+        });
+        tdNivel.appendChild(select);
+    } else {
+        const claseColor = obtenerClaseColorNivel(nivelActual);
+        tdNivel.className += ` ${claseColor}`;
+        tdNivel.textContent = nivelActual;
+    }
+
+    return tdNivel;
+}
+
+/**
+ * Función principal que coordina el renderizado completo de la tabla.
+ */
+function renderTable() {
+    const filtroJugador = document.getElementById('filtroJugador').value;
+    const filtroTipo = document.getElementById('filtroTipo').value;
+
+    const thead = document.getElementById('tableHead');
+    const tbody = document.getElementById('tableBody');
+    const tablaElement = document.querySelector('table');
+    
+    // Ajuste de ancho de tabla
+    if (filtroJugador !== "Todos") {
+        tablaElement.classList.remove('w-full', 'min-w-full');
+        tablaElement.classList.add('w-auto');
+    } else {
+        tablaElement.classList.remove('w-auto');
+        tablaElement.classList.add('min-w-full');
+    }
+
+    // 1. Generar Encabezado
+    thead.innerHTML = construirEncabezadoHTML(filtroJugador);
+
+    // 2. Filtrar lista de compis
     const compisFiltrados = compis.filter(c => {
         if (filtroTipo === "Todos") return true;
         return limpiarTexto(c.tipo) === limpiarTexto(filtroTipo);
     });
 
+    // 3. Generar Cuerpo de la Tabla
+    tbody.innerHTML = '';
+    let currentTipo = "";
+
     compisFiltrados.forEach((compi) => {
         let tr = document.createElement('tr');
         tr.className = "border-b border-gray-700 cell-hover";
 
-        // Agrupamiento por tipo insensible a tildes
+        // Agregar celda de Tipo si es el primero del grupo
         if (limpiarTexto(compi.tipo) !== limpiarTexto(currentTipo)) {
             currentTipo = compi.tipo;
-            
-            tipoRowSpan = compisFiltrados.filter(c => limpiarTexto(c.tipo) === limpiarTexto(currentTipo)).length;
-            
-            const tipoSinTilde = compi.tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-            const nombreArchivo = `${tipoSinTilde.toUpperCase()}.png`;
-            const rutaImagen = `assets/tipos/${nombreArchivo}`;
-
-            let tdTipo = document.createElement('td');
-            tdTipo.rowSpan = tipoRowSpan;
-            tdTipo.className = `px-2 py-2 text-sm font-bold text-center align-middle border-r border-gray-600 sticky left-0 z-0 tipo-${tipoSinTilde}`;
-
-            tdTipo.innerHTML = `
-                <div class="tipo-celda">
-                    <img src="${rutaImagen}" alt="${compi.tipo}" class="tipo-icono" onerror="this.style.display='none'">
-                    <span>${compi.tipo}</span>
-                </div>
-            `;
-
-            tr.appendChild(tdTipo);
+            const tipoRowSpan = compisFiltrados.filter(c => limpiarTexto(c.tipo) === limpiarTexto(currentTipo)).length;
+            tr.appendChild(crearCeldaTipo(compi, tipoRowSpan));
         }
 
-        let tdNombre = document.createElement('td');
-        tdNombre.className = "px-4 py-3 text-sm text-gray-200 border-r border-gray-600 font-medium sticky left-24 bg-gray-800 z-0";
-        tdNombre.textContent = compi.nombre;
-        tr.appendChild(tdNombre);
+        // Agregar celda de Nombre
+        tr.appendChild(crearCeldaNombreCompi(compi.nombre));
 
+        // Agregar celdas de Jugadores
         jugadores.forEach(jugador => {
             if (filtroJugador === "Todos" || filtroJugador === jugador) {
-                let tdNivel = document.createElement('td');
-                const claseAnchoCelda = (filtroJugador !== "Todos") ? "col-jugador-individual" : "min-w-[50px]";
-                tdNivel.className = `px-1 py-3 text-sm text-center border-r border-gray-700 ${claseAnchoCelda}`;
-                
-                let nivelActual = compi.niveles[jugador] || "-";
-
-                if (isEditMode) {
-                    let select = document.createElement('select');
-                    select.className = "border border-gray-500 p-1 rounded bg-gray-700 text-white text-xs w-full text-center outline-none";
-                    select.onchange = (e) => actualizarNivel(compi.id, jugador, e.target.value);
-                    
-                    opcionesNivel.forEach(opcion => {
-                        let opt = document.createElement('option');
-                        opt.value = opcion;
-                        opt.textContent = opcion;
-                        if (opcion === nivelActual) opt.selected = true;
-                        select.appendChild(opt);
-                    });
-                    tdNivel.appendChild(select);
-                } else {
-                    const coloresNivel = {
-                        "1/5": "bg-emerald-950/40 text-emerald-200",
-                        "2/5": "bg-emerald-900/60 text-emerald-200",
-                        "3/5": "bg-emerald-800 text-emerald-100",
-                        "4/5": "bg-emerald-700 text-white font-semibold",
-                        "5/5": "bg-emerald-600 text-white font-bold",
-
-                        "6/10": "bg-blue-950/40 text-blue-200",
-                        "7/10": "bg-blue-900/60 text-blue-200",
-                        "8/10": "bg-blue-800 text-blue-100",
-                        "9/10": "bg-blue-700 text-white font-semibold",
-                        "10/10": "bg-blue-600 text-white font-bold"
-                    };
-
-                    if (coloresNivel[nivelActual]) {
-                        tdNivel.className += ` ${coloresNivel[nivelActual]}`;
-                    } else {
-                        tdNivel.classList.add("text-gray-500");
-                    }
-
-                    tdNivel.textContent = nivelActual;
-                }
-                tr.appendChild(tdNivel);
+                tr.appendChild(crearCeldaNivel(compi, jugador, filtroJugador));
             }
         });
+
         tbody.appendChild(tr);
     });
 }
-
 // ==========================================
 // 5. GESTIÓN DE MODALES E INTERFAZ
 // ==========================================
